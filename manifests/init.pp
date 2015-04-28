@@ -47,7 +47,6 @@ class igo {
     ],
   }
 
-  # TODO: A confirmer.
   file { '/var/www':
     ensure => 'link',
     target => '/vagrant',
@@ -127,11 +126,14 @@ class igo {
 
 #Ajouter un fichier nommé 30-phalcon.ini dans /etc/php.d/: extension=phalcon.so
 #echo extension=phalcon.so >> /etc/php5/apache2/conf.d/30-phalcon.ini
-#retourner à l'utilisateur normal:igo
-#
-#Projet librairie dans /var/www/html
-#https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git
-#
+
+  vcsrepo { '/vagrant/librairie':
+    ensure   => present,
+    provider => git,
+    source   => 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git',
+    depth    => 1
+  }
+
 #chmod 775 /var/www/html/igo/interfaces/navigateur/app/cache
 #chmod 775 /var/www/html/igo/pilotage/app/cache
 #** Remplacer apache par l'usager de votre serveur Web
