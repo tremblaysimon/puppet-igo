@@ -136,9 +136,7 @@ class igo {
     ensure => '6.4.1-2'
   }
 
-  package {'gdal-bin':
-    ensure => '6.4.1-2'
-  }
+  package {'gdal-bin': }
 
   package {'gcc': }
   package {'make': }
@@ -194,6 +192,7 @@ class igo {
     ensure   => present,
     provider => git,
     source   => 'git://github.com/phalcon/cphalcon.git',
+    revision => 'phalcon-v1.3.1',
     depth    => 1,
     require => Package['git']
   }
