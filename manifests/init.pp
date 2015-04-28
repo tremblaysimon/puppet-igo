@@ -192,7 +192,7 @@ class igo {
     ensure   => present,
     provider => git,
     source   => 'git://github.com/phalcon/cphalcon.git',
-    revision => 'phalcon-v1.3.1'
+    revision => 'phalcon-v1.3.1',
     require => Package['git']
   }
 
