@@ -164,6 +164,7 @@ class igo {
   exec { "createlang-plpgsql":
     command => "createlang plpgsql ${databaseName}",
     path => "/usr/bin",
+    user => 'postgres',
     require => Class['postgresql::server::postgis'],
     returns => [0, 2]
   }
@@ -171,18 +172,21 @@ class igo {
   exec { "psql-postgis":
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql",
     path => "/usr/bin",
+    user => 'postgres',
     require => Exec['createlang-plpgsql']
   }
 
   exec { "psql-postgis_comments":
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql",
     path => "/usr/bin",
+    user => 'postgres',
     require => Exec['psql-postgis']
   }
 
   exec { "psql-spatial_ref_sys":
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql",
     path => "/usr/bin",
+    user => 'postgres',
     require => Exec['psql-postgis_comments']
   }
 
