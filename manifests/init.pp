@@ -241,21 +241,7 @@ class igo {
   file {'/vagrant/config/config.php':
     owner => 'vagrant',
     group => 'vagrant',
-    source => '/vagrant/config/config.exemple.php'
-  }
-
-  file_line { 'config-navigateur':
-    path => '/vagrant/config/config.php',
-    line => '\'navigateur\'    => "/navigateur/",',
-    match => '\'navigateur\'    => "\/igo_navigateur\/",',
-    require => File['/vagrant/config/config.php']
-  }
-
-  file_line { 'config-librairie':
-    path => '/vagrant/config/config.php',
-    line => '\'librairies\'    => "/librairie/",',
-    match => '\'librairies\'    => "\/igo\/librairie\/",',
-    require => File['/vagrant/config/config.php']
+    content => template("igo/config.php.erb")
   }
 
 }
