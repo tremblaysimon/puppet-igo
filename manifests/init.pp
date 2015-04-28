@@ -204,9 +204,13 @@ class igo {
     require => Vcsrepo['/var/tmp/cphalcon']    
   }
 
-#  php::config { 'extension=phalcon.so':
-#    file => '/etc/php5/apache2/conf.d/30-phalcon.ini'
-#  }
+  file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
+    content => 'extension=phalcon.so',
+    require => [
+                 Class['php'],
+                 Class['apache']
+               ]
+  }
 
   # TODO: Change to official librairie git depot when it will be available.
   vcsrepo { '/var/www/html/librairie':
