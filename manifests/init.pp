@@ -12,14 +12,14 @@
 #
 class igo {
 
-  $apacheDocRootPath = '/var/www'
-  
+  $apacheDocRootPath = '/var/www/html'
+
   $databaseName = 'postgres'
 
   $pgsqlScriptPath = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
 
 
-  class { 'apache': 
+  class { 'apache':
     mpm_module => 'prefork',
     default_vhost => false,
     user         => 'vagrant',
@@ -35,54 +35,127 @@ class igo {
     docroot          => $apacheDocRootPath,
     docroot_owner    => 'vagrant',
     docroot_group    => 'vagrant',
-    directories      => 
+    aliases => [
+      { alias            => '/pilotage',
+        path             => '/var/www/html/igo/pilotage/',
+      },
+      { alias            => '/navigateur/',
+        path             => '/var/www/html/igo/interfaces/navigateur/',
+      },
+      { alias            => '/api/',
+        path             => '/var/www/html/igo/interfaces/navigateur/api/',
+      }
+    ],
+    directories      =>
     [
       {
-        'path'     => $apacheDocRootPath,
-        'provider' => 'directory',
-        'options'  => ['Indexes','FollowSymLinks','MultiViews'],
-        'deny'     => 'from all',
-        'allow_override' => 'All'
+        path      => '/var/www/html/igo/pilotage/',
+        provider  => 'directory',
+        php_value => 'max_input_vars 2000',
+        rewrites => [
+                      {
+                        rewrite_rule => [ '^$ public/    [L]' ]
+                      },
+                      {
+                        rewrite_rule => [ '(.*) public/$1 [L]' ]
+                      }
+
+                    ]
+      },
+      {
+        path      => '/var/www/html/igo/pilotage/public/',
+        provider  => 'directory',
+        add_default_charset => 'UTF-8',
+        rewrites => [
+                      {
+                        rewrite_cond => [ '%{REQUEST_FILENAME} !-d' ]
+                      },
+                      {
+                        rewrite_cond => [ '%{REQUEST_FILENAME} !-f' ]
+                      },
+                      {
+                        rewrite_rule => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ]
+                      }
+                    ]
+      },
+      {
+        path      => '/var/www/html/igo/interfaces/navigateur/',
+        provider  => 'directory',
+        rewrites => [
+                      {
+                        rewrite_rule => [ '^$ public/    [L]' ]
+                      },
+                      {
+                        rewrite_rule => [ '(.*) public/$1 [L]' ]
+                      }
+                    ]
+      },
+      {
+        path      => '/var/www/html/igo/interfaces/navigateur/public/',
+        provider  => 'directory',
+        add_default_charset => 'UTF-8',
+        rewrites => [
+                      {
+                        rewrite_cond => [ '%{REQUEST_FILENAME} !-d' ]
+                      },
+                      {
+                        rewrite_cond => [ '%{REQUEST_FILENAME} !-f' ]
+                      },
+                      {
+                        rewrite_rule => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ]
+                      }
+                    ]
+      },
+      {
+        path      => '/var/www/html/igo/interfaces/navigateur/api/',
+        provider  => 'directory',
+        rewrites => [
+                      {
+                        rewrite_cond => [ '%{REQUEST_FILENAME} !-f' ]
+                      },
+                      {
+                        rewrite_rule => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ]
+                      }
+                    ]
       },
     ],
   }
 
-  file { '/var/www':
+  file { '/var/www/html/igo':
     ensure => 'link',
     target => '/vagrant',
     force  => true
   }
-  
+
   package {'cgi-mapserver':
     ensure => '6.4.1-2'
   }
-  
+
   package {'mapserver-bin':
     ensure => '6.4.1-2'
   }
-  
+
   package {'gdal-bin':
     ensure => '6.4.1-2'
   }
-  
+
   package {'gcc': }
   package {'make': }
   package {'libpcre3-dev': }
-  
+
   class { 'php': }
   class { 'php::dev': }
-  
+
   class { 'php::extension::curl': }
   class { 'php::extension::intl': }
   class { 'php::extension::mapscript': }
   class { 'php::extension::pgsql': }
-  
+
   class { 'postgresql::server':
     postgres_password => 'postgres'
   }
-  
-  class {'postgresql::server::postgis':}
 
+  class {'postgresql::server::postgis':}
 
   #TODO: Not the cleaniest way to do that (should avoid sequence of exec resources).
   exec { "createlang-plpgsql":
@@ -109,14 +182,14 @@ class igo {
     path => "/usr/bin",
     require => Exec['psql-postgis_comments']
   }
-  
+
   vcsrepo { '/var/tmp/cphalcon':
     ensure   => present,
     provider => git,
     source   => 'git://github.com/phalcon/cphalcon.git',
     depth    => 1
   }
-  
+
   exec { 'installAndBuild-cphalcon':
     command => "./install",
     cwd => '/var/tmp/cphalcon/build',
@@ -129,7 +202,7 @@ class igo {
   }
 
   # TODO: Change to official librairie git depot when it will be available.
-  vcsrepo { '/vagrant/librairie':
+  vcsrepo { '/var/www/html/librairie':
     ensure   => present,
     provider => git,
     source   => 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git',
@@ -148,11 +221,24 @@ class igo {
     mode => '0775'
   }
 
-#
-#Configurer le fichier igo/config/config.php
-#
-#Modifier les deux valeurs de l'array uri suivantes:
-#
-#'navigateur' => "/navigateur/" 'librairie' => "/librairie/"
+  file {'/vagrant/config/config.php':
+    owner => 'vagrant',
+    group => 'vagrant',
+    source => '/vagrant/config/config.exemple.php'
+  }
+
+  file_line { 'config-navigateur':
+    path => '/vagrant/config/config.php',
+    line => '\'navigateur\'    => "/navigateur/",',
+    match => '\'navigateur\'    => "\/igo_navigateur\/",',
+    require => File['/vagrant/config/config.php']
+  }
+
+  file_line { 'config-librairie':
+    path => '/vagrant/config/config.php',
+    line => '\'librairies\'    => "/librairie/",',
+    match => '\'librairies\'    => "\/igo\/librairie\/",',
+    require => File['/vagrant/config/config.php']
+  }
 
 }
