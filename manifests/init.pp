@@ -144,6 +144,8 @@ class igo {
   package {'make': }
   package {'libpcre3-dev': }
 
+  package {'git': }
+
   class { 'php': }
   class { 'php::dev': }
 
@@ -188,7 +190,8 @@ class igo {
     ensure   => present,
     provider => git,
     source   => 'git://github.com/phalcon/cphalcon.git',
-    depth    => 1
+    depth    => 1,
+    require => Package['git']
   }
 
   exec { 'installAndBuild-cphalcon':
@@ -207,7 +210,12 @@ class igo {
     ensure   => present,
     provider => git,
     source   => 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git',
-    depth    => 1
+    depth    => 1,
+    require => [
+                 Package['git'],
+                 Class['apache']
+               ]
+    }
   }
 
   file { '/var/www/html/igo/interfaces/navigateur/app/cache':
