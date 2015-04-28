@@ -215,7 +215,6 @@ class igo {
                  Package['git'],
                  Class['apache']
                ]
-    }
   }
 
   file { '/var/www/html/igo/interfaces/navigateur/app/cache':
