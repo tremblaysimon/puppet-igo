@@ -193,14 +193,17 @@ class igo {
     provider => git,
     source   => 'git://github.com/phalcon/cphalcon.git',
     revision => 'phalcon-v1.3.1',
-    require => Package['git']
+    require  => Package['git']
   }
 
   exec { 'installAndBuild-cphalcon':
     command => "./install",
     cwd => '/var/tmp/cphalcon/build',
-    path => "/usr/bin",
-    require => Vcsrepo['/var/tmp/cphalcon']    
+    path => ['/usr/bin', '/bin'],
+    require => [
+                 Vcsrepo['/var/tmp/cphalcon'],
+                 Class['php::dev']
+               ]
   }
 
   file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
