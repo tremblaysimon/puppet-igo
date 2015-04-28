@@ -119,7 +119,7 @@ class igo {
   
   exec { 'installAndBuild-cphalcon':
     command => "./install",
-    cwd => '/var/tmp/cphalcon/build'
+    cwd => '/var/tmp/cphalcon/build',
     path => "/usr/bin",
     require => Vcsrepo['/var/tmp/cphalcon']    
   }
