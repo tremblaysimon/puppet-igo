@@ -124,9 +124,11 @@ class igo {
     require => Vcsrepo['/var/tmp/cphalcon']    
   }
 
-#Ajouter un fichier nommé 30-phalcon.ini dans /etc/php.d/: extension=phalcon.so
-#echo extension=phalcon.so >> /etc/php5/apache2/conf.d/30-phalcon.ini
+  php::config { 'extension=phalcon.so':
+    file => '/etc/php5/apache2/conf.d/30-phalcon.ini'
+  }
 
+  # TODO: Change to official librairie git depot when it will be available.
   vcsrepo { '/vagrant/librairie':
     ensure   => present,
     provider => git,
@@ -134,11 +136,18 @@ class igo {
     depth    => 1
   }
 
-#chmod 775 /var/www/html/igo/interfaces/navigateur/app/cache
-#chmod 775 /var/www/html/igo/pilotage/app/cache
-#** Remplacer apache par l'usager de votre serveur Web
-#chgrp apache /var/www/html/igo/interfaces/navigateur/app/cache
-#chgrp apache /var/www/html/igo/pilotage/app/cache
+  file { '/var/www/html/igo/interfaces/navigateur/app/cache':
+    owner => 'vagrant',
+    group => 'vagrant',
+    mode => '0775'
+  }
+
+  file { '/var/www/html/igo/pilotage/app/cache':
+    owner => 'vagrant',
+    group => 'vagrant',
+    mode => '0775'
+  }
+
 #
 #Configurer le fichier igo/config/config.php
 #
