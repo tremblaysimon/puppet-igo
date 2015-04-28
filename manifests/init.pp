@@ -19,7 +19,6 @@ class igo {
   $pgsqlScriptPath = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
 
 
-  include apache::mod::php
   include apache::mod::rewrite
   include apache::mod::cgi
 
@@ -29,6 +28,7 @@ class igo {
     user         => 'vagrant',
     group        => 'vagrant'
   }
+  class { '::apache::mod::php': }
 
   apache::vhost { 'igo':
     vhost_name       => '*',
