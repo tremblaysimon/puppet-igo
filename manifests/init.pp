@@ -202,18 +202,18 @@ class igo {
     path => ['/usr/bin', '/bin'],
     require => [
                  Vcsrepo['/var/tmp/cphalcon'],
-                 Class['php::dev'],
-                 Class['apache']
-               ],
-    notify => Service['apache2']
+                 Class['php::dev']
+               ]
   }
 
   file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
     content => 'extension=phalcon.so',
     require => [
                  Class['php'],
-                 Class['apache']
-               ]
+                 Class['apache'],
+                 Exec['installAndBuild-cphalcon']
+               ],
+    notify => Service['apache2']
   }
 
   # TODO: Change to official librairie git depot when it will be available.
