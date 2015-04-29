@@ -202,8 +202,10 @@ class igo {
     path => ['/usr/bin', '/bin'],
     require => [
                  Vcsrepo['/var/tmp/cphalcon'],
-                 Class['php::dev']
+                 Class['php::dev'],
+                 Class['apache']
                ]
+    notify => Service['apache']
   }
 
   file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
