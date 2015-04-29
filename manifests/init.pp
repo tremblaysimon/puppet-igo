@@ -205,7 +205,7 @@ class igo {
                  Class['php::dev'],
                  Class['apache']
                ],
-    notify => Service['apache']
+    notify => Service['apache2']
   }
 
   file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
