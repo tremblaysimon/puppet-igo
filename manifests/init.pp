@@ -204,7 +204,7 @@ class igo {
                  Vcsrepo['/var/tmp/cphalcon'],
                  Class['php::dev'],
                  Class['apache']
-               ]
+               ],
     notify => Service['apache']
   }
 
