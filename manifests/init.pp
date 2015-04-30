@@ -191,7 +191,7 @@ class igo {
   vcsrepo { '/var/tmp/cphalcon':
     ensure   => present,
     provider => git,
-    source   => 'git://github.com/phalcon/cphalcon.git',
+    source   => 'https://github.com/phalcon/cphalcon.git',
     revision => 'phalcon-v1.3.1',
     require  => Package['git']
   }
