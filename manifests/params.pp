@@ -2,8 +2,10 @@
 
 class igo::params {
 
-  $igoRootPath  = '/var/igoroot'
-  $databaseName = 'postgres'
-  $appUser      = 'vagrant'
-  $appGroup     = 'vagrant'
+  $igoRootPath      = '/var/igoroot'
+  $databaseName     = 'igo'
+  $databaseUser     = 'igo'
+  $databasePassword = 'password'
+  $appUser          = 'vagrant'
+  $appGroup         = 'vagrant'
 }
