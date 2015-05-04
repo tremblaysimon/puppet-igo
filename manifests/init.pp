@@ -10,14 +10,18 @@
 #
 # Sample Usage:
 #
-class igo {
-
-  $apacheDocRootPath = '/var/www/html'
-
-  $databaseName = 'postgres'
+class igo(
+  $igoRootPath      = $::igo::params::igoRootPath,
+  $databaseName     = $::igo::params::databaseName,
+  $databaseUser     = $::igo::params::databaseUser,
+  $databasePassword = $::igo::params::databasePassword,
+  $appUser          = $::igo::params::appUser,
+  $appGroup         = $::igo::params::appGroup
+) inherits ::igo::params {
 
   $pgsqlScriptPath = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
 
+  $igoAppPath = "${igoRootPath}/igo"
 
   include apache::mod::rewrite
   include apache::mod::cgi
@@ -25,32 +29,32 @@ class igo {
   class { 'apache':
     mpm_module => 'prefork',
     default_vhost => false,
-    user         => 'vagrant',
-    group        => 'vagrant'
+    user         => $appUser,
+    group        => $appGroup
   }
   class { '::apache::mod::php': }
 
   apache::vhost { 'igo':
     vhost_name       => '*',
     port             => '80',
-    docroot          => $apacheDocRootPath,
-    docroot_owner    => 'vagrant',
-    docroot_group    => 'vagrant',
+    docroot          => $igoRootPath,
+    docroot_owner    => $appUser,
+    docroot_group    => $appGroup,
     aliases => [
       { alias            => '/pilotage',
-        path             => '/var/www/html/igo/pilotage/',
+        path             => "${igoAppPath}/pilotage/",
       },
       { alias            => '/navigateur/',
-        path             => '/var/www/html/igo/interfaces/navigateur/',
+        path             => "${igoAppPath}/interfaces/navigateur/",
       },
       { alias            => '/api/',
-        path             => '/var/www/html/igo/interfaces/navigateur/api/',
+        path             => "${igoAppPath}/interfaces/navigateur/api/",
       }
     ],
     directories      =>
     [
       {
-        path      => '/var/www/html/igo/pilotage/',
+        path      => "${igoAppPath}/pilotage/",
         provider  => 'directory',
         php_value => 'max_input_vars 2000',
         rewrites => [
@@ -64,7 +68,7 @@ class igo {
                     ]
       },
       {
-        path      => '/var/www/html/igo/pilotage/public/',
+        path      => "${igoAppPath}/pilotage/public/",
         provider  => 'directory',
         add_default_charset => 'UTF-8',
         rewrites => [
@@ -80,7 +84,7 @@ class igo {
                     ]
       },
       {
-        path      => '/var/www/html/igo/interfaces/navigateur/',
+        path      => "${igoAppPath}/interfaces/navigateur/",
         provider  => 'directory',
         rewrites => [
                       {
@@ -92,7 +96,7 @@ class igo {
                     ]
       },
       {
-        path      => '/var/www/html/igo/interfaces/navigateur/public/',
+        path      => "${igoAppPath}/interfaces/navigateur/public/",
         provider  => 'directory',
         add_default_charset => 'UTF-8',
         rewrites => [
@@ -108,7 +112,7 @@ class igo {
                     ]
       },
       {
-        path      => '/var/www/html/igo/interfaces/navigateur/api/',
+        path      => "${igoAppPath}/interfaces/navigateur/api/",
         provider  => 'directory',
         rewrites => [
                       {
@@ -122,9 +126,15 @@ class igo {
     ],
   }
 
-  file { '/var/www/html/igo':
-    ensure => 'link',
-    target => '/vagrant',
+  file { $igoAppPath:
+    ensure  => 'link',
+    target  => '/vagrant',
+    force   => true,
+    require => File[$igoRootPath]
+  }
+
+  file { $igoRootPath:
+    ensure => 'directory',
     force  => true
   }
 
@@ -206,6 +216,7 @@ class igo {
                ]
   }
 
+  # FIXME: File path change depends on OS.
   file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
     content => 'extension=phalcon.so',
     require => [
@@ -213,37 +224,41 @@ class igo {
                  Class['apache'],
                  Exec['installAndBuild-cphalcon']
                ],
-    notify => Service['apache2']
+    notify => Class['apache::service']
   }
 
   # TODO: Change to official librairie git depot when it will be available.
-  vcsrepo { '/var/www/html/librairie':
+  vcsrepo { "${igoRootPath}/librairie":
     ensure   => present,
     provider => git,
     source   => 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git',
     depth    => 1,
     require => [
                  Package['git'],
-                 Class['apache']
+                 Class['apache'],
+                 File[$igoRootPath]
                ]
   }
 
-  file { '/var/www/html/igo/interfaces/navigateur/app/cache':
-    owner => 'vagrant',
-    group => 'vagrant',
-    mode => '0775'
+  file { "${igoAppPath}/interfaces/navigateur/app/cache":
+    owner => $appUser,
+    group => $appGroup,
+    mode => '0775',
+    require => File[$igoAppPath]
   }
 
-  file { '/var/www/html/igo/pilotage/app/cache':
-    owner => 'vagrant',
-    group => 'vagrant',
-    mode => '0775'
+  file { "${igoAppPath}/pilotage/app/cache":
+    owner => $appUser,
+    group => $appGroup,
+    mode => '0775',
+    require => File[$igoAppPath]
   }
 
-  file {'/vagrant/config/config.php':
-    owner => 'vagrant',
-    group => 'vagrant',
-    content => template("igo/config.php.erb")
+  file {"${igoAppPath}/config/config.php":
+    owner => $appUser,
+    group => $appGroup,
+    content => template("igo/config.php.erb"),
+    require => File[$igoAppPath]
   }
 
 }
