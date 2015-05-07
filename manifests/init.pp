@@ -71,7 +71,7 @@ class igo(
 
   class {'postgresql::server::postgis':}
 
-  postgresql::server::db { ${databaseName}:
+  postgresql::server::db { $databaseName:
     user     => $databaseUser,
     password => $databasePassword,
   }
