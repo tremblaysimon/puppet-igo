@@ -1,14 +1,14 @@
 # Class: igo
 #
-# This module manages igo
+# This module manages installation and configuration of IGO project.
 #
-# Parameters: none
 #
-# Actions:
 #
 # Requires: see metadata.json
 #
 # Sample Usage:
+#
+# class { 'igo': }
 #
 class igo(
   $igoRootPath      = $::igo::params::igoRootPath,
@@ -19,6 +19,7 @@ class igo(
   $appGroup         = $::igo::params::appGroup
 ) inherits ::igo::params {
 
+  # FIXME: File path change depends on OS.
   $pgsqlScriptPath = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
 
   $igoAppPath = "${igoRootPath}/igo"
@@ -66,26 +67,25 @@ class igo(
   class { 'php::extension::mapscript': }
   class { 'php::extension::pgsql': }
 
-  class { 'postgresql::server':
-    postgres_password => 'postgres'
-  }
+  class { 'postgresql::server': }
 
   class {'postgresql::server::postgis':}
 
-  #TODO: Not the cleaniest way to do that (should avoid sequence of exec resources).
-  exec { "createlang-plpgsql":
-    command => "createlang plpgsql ${databaseName}",
-    path => "/usr/bin",
-    user => 'postgres',
-    require => Class['postgresql::server::postgis'],
-    returns => [0, 2]
+  postgresql::server::db { ${databaseName}:
+    user     => $databaseUser,
+    password => $databasePassword,
+  }
+
+  postgresql::server::extension { 'plpgsql':
+    database => $databaseName,
+    ensure => present
   }
 
   exec { "psql-postgis":
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql",
     path => "/usr/bin",
     user => 'postgres',
-    require => Exec['createlang-plpgsql']
+    require => Postgresql::Server::Extension['plpgsql']
   }
 
   exec { "psql-postgis_comments":
